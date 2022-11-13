@@ -159,7 +159,40 @@ class JWSystem:
 
         return idx
 
-    
+
+    def parselTimetable(self , response):
+        # 解析课表
+        html = etree.HTML(response)
+        # html = etree.HTML(open('test.html', 'r', encoding="utf-8").read())
+        # 所有课表标签
+        wholeSchedule = html.xpath('//table[1]/tr')[2:-1]
+        repS = -1
+        data = []
+        allData = {}
+        for whole in wholeSchedule:
+            repS += 1
+            lineSchedule = []
+            for td in whole.xpath('./td'):
+                # 获取当前标签所有文本
+                text = td.xpath('.//text()')
+                if text:
+                    text2 = text[0]
+                    if text2 == str(repS):
+                        text = text[1:]
+                    elif text2 == '\xa0' or text2 == '上午' or text2 == '下午' or text2 == '晚上':
+                        continue
+                scheduleStr = "".join(text) if text else ""
+                scheduleStr = scheduleStr
+                lineSchedule.append(scheduleStr.replace('[教学大纲|授课计划]', ''))
+            data.append(lineSchedule)
+        allData['row_data'] = data
+        return allData
+
+    def Timetable(self, idx):
+        # 获取课表
+        url = "https://jwcjwxt2.fzu.edu.cn:81/student/xkjg/wdkb/kb_xs.aspx?id=" + idx
+        r = self.getIntercept(url)
+        return self.parselTimetable(r.text) 
 
 
 
